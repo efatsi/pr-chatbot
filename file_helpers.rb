@@ -1,4 +1,4 @@
-class FileHelpers
+module FileHelpers
   def fetch_directory_tree(path = '.')
     gitignore_path = File.join(path, '.gitignore')
     ignore_patterns = ["./public/*", "./playground/*", "./db/migrate/*"]

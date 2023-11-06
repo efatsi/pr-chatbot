@@ -6,12 +6,9 @@ load 'file_helpers.rb'
 require 'bundler/setup'
 Bundler.require(:default)
 
-# useful, for when have to cut down the file content passed in
-# OpenAI.rough_token_count("Your text")
-
 PROJECT_CONTEXT = [
-  "it uses tailwindCSS",
-  "do not define custom styles"
+  # "it uses tailwindCSS",
+  # "do not define custom styles"
 ]
 
 class PRBot
@@ -23,10 +20,10 @@ class PRBot
   def ask_for_contextual_files
     directory_tree = fetch_directory_tree
     files_needed_prompt = [
-      "What files should I review to implement the following feature request in a Rails project?",
-      "Feature request: #{@feature_request}",
-      "Directory tree:",
+      "What files from the Directory Tree should I review to implement the following feature request in this project?",
+      "Directory Tree:",
       "#{directory_tree.join("\n")}",
+      "Feature request: #{@feature_request}",
       "Respond with minimal prose",
       "Things to know about this project: [#{PROJECT_CONTEXT.join(', ')}]"
     ].join("\n")
@@ -45,9 +42,9 @@ class PRBot
     implement_feature_prompt = [
       "How would you implement the following feature request using Ruby methods add_file(filepath, text) and change_file(filepath, og_text, new_text)?",
       "Feature request: #{@feature_request}",
-      "Files:",
+      "Only make changes to these files, or add new ones if necessary:",
       "#{files_content.to_json}",
-      "Respond with no prose, wrap all Ruby code blocks in three backtics (```ruby)",
+      "For each change, provide a short summary and then a ruby code block w/ a single add_file or change_file call (```ruby)",
       "Things to know about this project: [#{PROJECT_CONTEXT.join(', ')}]"
     ].join("\n")
 
@@ -57,15 +54,16 @@ class PRBot
   end
 
   def run_chatgpt_instructions(instructions)
-    instructions.split("\n").each do |instruction|
-      if instruction.start_with?("add_file")
-        _, filepath, text = instruction.match(/add_file\("(.+?)", "(.+?)"\)/).captures
-        add_file(filepath, JSON.parse(text.gsub('\"', '"')))
-      elsif instruction.start_with?("change_file")
-        _, filepath, og_text, new_text = instruction.match(/change_file\("(.+?)", "(.+?)", "(.+?)"\)/).captures
-        change_file(filepath, JSON.parse(og_text.gsub('\"', '"')), JSON.parse(new_text.gsub('\"', '"')))
-      end
-    end
+    # TODO: Implement this to not split on newlines, but recognize whole blocks of instructions
+    # instructions.split("\n").each do |instruction|
+    #   if instruction.start_with?("add_file")
+    #     _, filepath, text = instruction.match(/add_file\("(.+?)", "(.+?)"\)/).captures
+    #     add_file(filepath, JSON.parse(text.gsub('\"', '"')))
+    #   elsif instruction.start_with?("change_file")
+    #     _, filepath, og_text, new_text = instruction.match(/change_file\("(.+?)", "(.+?)", "(.+?)"\)/).captures
+    #     change_file(filepath, JSON.parse(og_text.gsub('\"', '"')), JSON.parse(new_text.gsub('\"', '"')))
+    #   end
+    # end
   end
 
   def save_git_commit(feature_request)
